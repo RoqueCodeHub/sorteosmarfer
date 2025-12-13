@@ -148,19 +148,7 @@ export default function Header() {
         )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* BOTÓN FLOTANTE FIJO (Se muestra si NO estamos en la página de registro)  */}
-      {/* ========================================================================= */}
-      {!shouldHideFloatButton && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-transparent z-50 flex justify-center md:hidden">
-          <Link
-            href="/registro"
-            className="w-full max-w-sm px-6 py-2 bg-orange-600 text-white font-bold rounded-full hover:bg-orange-700 transition text-center shadow-2xl"
-          >
-            PARTICIPA YA
-          </Link>
-        </div>
-      )}
+      
     </header>
   )
 }
