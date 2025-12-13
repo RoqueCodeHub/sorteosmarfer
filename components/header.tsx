@@ -10,8 +10,12 @@ export default function Header() {
   const router = useRouter()
   const pathname = usePathname()
 
+  // ** Lógica para ocultar el botón flotante en rutas específicas **
+  const hideFloatButtonRoutes = ["/registro", "/participa"]
+  const shouldHideFloatButton = hideFloatButtonRoutes.includes(pathname)
+
   // Función para hacer scroll solo si estamos en la página principal
-const scrollToSection = (sectionId: string) => {
+  const scrollToSection = (sectionId: string) => {
     // Si ya estamos en la página principal
     if (pathname === "/") {
       const element = document.getElementById(sectionId)
@@ -27,6 +31,7 @@ const scrollToSection = (sectionId: string) => {
   }
 
   return (
+    // Contenedor principal del Header
     <header className="sticky top-0 z-50 bg-white border-b-2 border-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -142,6 +147,20 @@ const scrollToSection = (sectionId: string) => {
           </nav>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* BOTÓN FLOTANTE FIJO (Se muestra si NO estamos en la página de registro)  */}
+      {/* ========================================================================= */}
+      {!shouldHideFloatButton && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-transparent z-50 flex justify-center md:hidden">
+          <Link
+            href="/registro"
+            className="w-full max-w-sm px-6 py-2 bg-orange-600 text-white font-bold rounded-full hover:bg-orange-700 transition text-center shadow-2xl"
+          >
+            PARTICIPA YA
+          </Link>
+        </div>
+      )}
     </header>
   )
 }
