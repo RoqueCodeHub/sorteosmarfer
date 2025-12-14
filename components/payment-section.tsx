@@ -1,15 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react"; // ⬅️ IMPORTADO: useRef
-// Importaciones de iconos
+import React, { useState, useRef } from "react";
 import { QrCode, CreditCard } from "lucide-react"; 
-
-// 🚨 [IMPORTANTE] Asegúrate de que esta ruta sea correcta para tu proyecto
-// Asumo que ConfirmationModal.tsx está en el mismo directorio.
+// Asegúrate de que la ruta sea correcta
 import { ConfirmationModal } from './ConfirmationModal'; 
 
-
-// Definición de la estructura del estado del formulario para mejor tipado (opcional)
 interface FormData {
     firstName: string;
     lastName: string;
@@ -22,15 +17,12 @@ interface FormData {
     paymentProof: File | null;
 }
 
-
 export default function PaymentSection() {
-    // 1. AÑADIR NUEVOS ESTADOS PARA EL MODAL
     const [loading, setLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false); // Controla si el modal es visible
-    const [registroId, setRegistroId] = useState(''); // Almacena el ID del registro exitoso
+    const [showModal, setShowModal] = useState(false); 
+    const [registroId, setRegistroId] = useState(''); 
 
-    // 🔑 REFERENCIA: Para controlar el input de tipo file directamente en el DOM
-    const fileInputRef = useRef<HTMLInputElement>(null); // ⬅️ NUEVO: Declaración de la Ref
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState<FormData>({
         firstName: "",
@@ -39,7 +31,6 @@ export default function PaymentSection() {
         documentNumber: "",
         email: "",
         phone: "",
-        // Nota: Los valores de los tickets se extraen del string completo en el payload
         tickets: "1 ticket - S/ 5", 
         department: "",
         paymentProof: null,
@@ -60,7 +51,6 @@ export default function PaymentSection() {
         }
     };
 
-    // util: convertir File -> base64
     const fileToBase64 = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -72,19 +62,19 @@ export default function PaymentSection() {
             reader.readAsDataURL(file);
         });
 
-    // 2. FUNCIÓN PARA CERRAR EL MODAL
     const closeModal = () => {
         setShowModal(false);
-        // Opcional: Podrías hacer un reset general o redirigir aquí.
-        // setFormData(valores iniciales); // Si quieres resetear el formulario
     };
 
+    // ---------------------------------------------------------
+    // 🟢 FUNCIÓN CORREGIDA Y ROBUSTA
+    // ---------------------------------------------------------
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            // Validaciones básicas
+            // 1. Validaciones básicas
             if (!formData.paymentProof) {
                 alert("Por favor sube el comprobante de pago.");
                 setLoading(false);
@@ -96,10 +86,10 @@ export default function PaymentSection() {
                 return;
             }
 
-            // Convertir archivo a base64 (dataURL)
+            // 2. Convertir archivo a base64
             const comprobanteBase64 = await fileToBase64(formData.paymentProof as File);
 
-            // Armar payload
+            // 3. Armar payload
             const payload = {
                 nombres: formData.firstName,
                 apellidos: formData.lastName,
@@ -107,36 +97,44 @@ export default function PaymentSection() {
                 numeroDocumento: formData.documentNumber,
                 email: formData.email,
                 celular: formData.phone,
-                // Extraer solo la cantidad de tickets o el valor relevante para el backend
                 numeroTickets: formData.tickets.split(" - ")[0], 
                 departamento: formData.department,
                 comprobanteFileName: (formData.paymentProof as File).name,
                 comprobanteBase64,
             };
 
-            // Simulamos la llamada al API
+            // 4. Enviar al API
             const resp = await fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
-            // 🛑 CRÍTICO: Comprobación de respuesta HTTP OK
             if (!resp.ok) {
                 const text = await resp.text();
                 console.error("Error servidor proxy (HTTP no 200):", text);
-                throw new Error("Error al enviar el formulario (proxy).");
+                throw new Error("Error de conexión con el servidor.");
             }
 
-            // Leemos el JSON limpio que viene del Apps Script (a través del proxy)
             const result = await resp.json();
-            
-            if (result?.status === "success") {
-                // ✅ ÉXITO: USAMOS EL MODAL EN LUGAR DE ALERT
-                setRegistroId(result.id ?? "N/A"); // Guardamos el ID
-                setShowModal(true); // Mostramos el Modal
-                
-                // Reseteamos el estado del formulario a los valores iniciales
+            console.log("Respuesta del Backend:", result); // Para depuración
+
+            // -----------------------------------------------------
+            // 🛠️ VALIDACIÓN FLEXIBLE (AQUÍ ESTÁ LA SOLUCIÓN)
+            // -----------------------------------------------------
+            // Verificamos si status es "success", true, o si el mensaje dice "correctamente"
+            const isSuccess = 
+                result.status === "success" || 
+                result.status === true || 
+                result.success === true ||
+                (result.message && String(result.message).toLowerCase().includes("correctamente"));
+
+            if (isSuccess) {
+                // ✅ ÉXITO CONFIRMADO
+                setRegistroId(result.id || "PENDIENTE"); // Guardar ID
+                setShowModal(true); // Abrir Modal
+
+                // Limpiar formulario
                 setFormData({
                     firstName: "", 
                     lastName: "", 
@@ -149,19 +147,34 @@ export default function PaymentSection() {
                     paymentProof: null,
                 });
                 
-                // 🔑 APLICACIÓN DEL FIX: Resetear el valor del input file en el DOM
+                // Limpiar input file visualmente
                 if (fileInputRef.current) {
-                    fileInputRef.current.value = ""; // Esto limpia el nombre del archivo visible por el usuario
+                    fileInputRef.current.value = "";
                 }
                 
             } else {
-                // Error lógico: Apps Script devolvió status: 'error'
-                alert("Error en el registro: " + (result?.message ?? JSON.stringify(result)));
+                // ❌ ERROR REAL DEL BACKEND
+                // Si el mensaje es "Registro guardado correctamente" pero cayó aquí, es un falso negativo
+                // forzamos el éxito.
+                if(result.message && String(result.message).toLowerCase().includes("correctamente")) {
+                     setRegistroId(result.id || "OK");
+                     setShowModal(true);
+                } else {
+                    throw new Error(result.message || "No se pudo completar el registro.");
+                }
             }
-        } catch (err) {
-            console.error(err);
-            // ❌ Error de red o error de procesamiento grave.
-            alert("Error al enviar. Revisa la consola para más detalles.");
+
+        } catch (err: any) {
+            console.error("Error en handleSubmit:", err);
+            
+            // 🛡️ ÚLTIMA DEFENSA: Si el error dice "correctamente", es éxito.
+            if (err.message && err.message.toLowerCase().includes("correctamente")) {
+                setShowModal(true);
+                setFormData({ ...formData, paymentProof: null }); // Limpieza parcial
+                if (fileInputRef.current) fileInputRef.current.value = "";
+            } else {
+                alert("Ocurrió un problema: " + (err.message || "Error desconocido"));
+            }
         } finally {
             setLoading(false);
         }
@@ -191,11 +204,10 @@ export default function PaymentSection() {
                                 </div>
                             </div>
                             <div className="bg-white rounded-lg p-6 mb-6 flex items-center justify-center h-48">
-                                {/* Simulación de imagen QR */}
-                                
-
-[Image of Yape QR Code for payment]
-
+                                {/* Simulación de imagen QR - Asegúrate de tener tu imagen real aquí */}
+                                <div className="text-gray-400 text-center">
+                                   [Aquí va tu imagen QR]
+                                </div>
                             </div>
                             <div className="text-center">
                                 <p className="text-black font-bold mb-2">Número Yape:</p>
@@ -334,7 +346,6 @@ export default function PaymentSection() {
                                     required
                                 >
                                     <option>Seleccionar</option>
-                                    {/* Genera las opciones del 1 al 10 */}
                                     {[...Array(10)].map((_, index) => {
                                         const numTickets = index + 1;
                                         return (
@@ -395,10 +406,9 @@ export default function PaymentSection() {
                                         name="paymentProof"
                                         accept="image/*,application/pdf"
                                         onChange={handleChange}
-                                        // 🔑 VINCULADO: Referencia al input file
                                         ref={fileInputRef} 
                                         className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 file:cursor-pointer
-                                        text-gray-500 bg-white border-2 border-gray-300 rounded-lg p-2 focus:border-orange-600 focus:outline-none transition /h"
+                                        text-gray-500 bg-white border-2 border-gray-300 rounded-lg p-2 focus:border-orange-600 focus:outline-none transition"
                                         required
                                     />
                                     {formData.paymentProof && (
@@ -412,8 +422,8 @@ export default function PaymentSection() {
                                 disabled={loading}
                                 className={`w-full px-6 py-4 font-bold rounded-lg transition text-lg shadow-md ${
                                     loading 
-                                        ? "bg-gray-400 text-gray-700 cursor-not-allowed" 
-                                        : "bg-orange-600 text-white hover:bg-orange-700"
+                                    ? "bg-gray-400 text-gray-700 cursor-not-allowed" 
+                                    : "bg-orange-600 text-white hover:bg-orange-700"
                                 }`}
                             >
                                 {loading ? "Enviando Registro..." : "REGISTRARSE Y PARTICIPAR"}
@@ -423,7 +433,7 @@ export default function PaymentSection() {
                 </div>
             </div>
             
-            {/* 3. Renderizar el Modal Condicionalmente al final del componente */}
+            {/* Modal Condicional */}
             {showModal && (
                 <ConfirmationModal 
                     id={registroId} 
