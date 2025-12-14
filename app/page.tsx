@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react" // 1. Importamos Suspense
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
 import HeroSlider from "@/components/hero-slider"
@@ -10,7 +10,8 @@ import WinnersSlider from "@/components/winners-slider"
 import SocialSection from "@/components/social-section"
 import Footer from "@/components/footer"
 
-// 2. Creamos este componente pequeño solo para manejar el Scroll
+// --- COMPONENTE AUXILIAR PARA EL SCROLL ---
+// Este componente se encarga solo de leer la URL
 function ScrollHandler() {
   const searchParams = useSearchParams()
   const scrollTarget = searchParams.get("scroll")
@@ -36,18 +37,15 @@ function ScrollHandler() {
     }
   }, [mounted, scrollTarget])
 
-  return null // Este componente no dibuja nada, solo hace lógica
+  return null
 }
 
-// 3. Tu componente Home queda limpio y protegido con Suspense
+// --- COMPONENTE PRINCIPAL ---
 export default function Home() {
-  // Nota: He quitado el "if (!mounted) return null" del Home principal
-  // para que tu página tenga mejor SEO y se vea contenido inmediatamente.
-
   return (
     <main className="min-h-screen bg-black text-white selection:bg-primary selection:text-primary-foreground">
       
-      {/* Aquí envolvemos la lógica que lee la URL */}
+      {/* AQUÍ ESTÁ LA SOLUCIÓN: Envolvemos el manejador en Suspense */}
       <Suspense fallback={null}>
         <ScrollHandler />
       </Suspense>
