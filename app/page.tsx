@@ -1,5 +1,6 @@
+// app/page.tsx
 import { Suspense } from "react"
-import ScrollHandler from "@/components/scroll-handler" 
+import ScrollHandler from "@/components/scroll-handler"
 
 import HeroSlider from "@/components/hero-slider"
 import CountdownSection from "@/components/countdown-section"
@@ -8,7 +9,7 @@ import WinnersSlider from "@/components/winners-slider"
 import SocialSection from "@/components/social-section"
 import Footer from "@/components/footer"
 
-// 👇 ESTA LÍNEA ARREGLA EL ERROR OBLIGANDO A RENDERIZADO DINÁMICO
+// 👇 ESTA ES LA LÍNEA CLAVE. SI NO ESTÁ, EL BUILD FALLA.
 export const dynamic = "force-dynamic"
 
 export default function Home() {
