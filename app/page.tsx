@@ -9,13 +9,15 @@ import WinnersSlider from "@/components/winners-slider"
 import SocialSection from "@/components/social-section"
 import Footer from "@/components/footer"
 
-// 👇 ESTA ES LA LÍNEA CLAVE. SI NO ESTÁ, EL BUILD FALLA.
+// 👇 ESTA LÍNEA ES OBLIGATORIA PARA ARREGLAR EL ERROR DE BUILD
+// Le dice a Next.js que construya la página al momento y no estática.
 export const dynamic = "force-dynamic"
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white selection:bg-primary selection:text-primary-foreground">
       
+      {/* El Suspense protege la lectura de parámetros de la URL */}
       <Suspense fallback={null}>
         <ScrollHandler />
       </Suspense>
