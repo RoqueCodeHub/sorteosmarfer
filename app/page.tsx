@@ -1,32 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
 import HeroSlider from "@/components/hero-slider"
 import CountdownSection from "@/components/countdown-section"
 import PrizesSection from "@/components/prizes-section"
 import WinnersSlider from "@/components/winners-slider"
-import ConsultarCodigo from "@/components/consultaticket"
+import SocialSection from "@/components/social-section"
+import Footer from "@/components/footer"
 
-export default function Home() {
-  const [mounted, setMounted] = useState(false)
+// --- COMPONENTE AUXILIAR PARA EL SCROLL ---
+// Este componente se encarga solo de leer la URL
+function ScrollHandler() {
   const searchParams = useSearchParams()
   const scrollTarget = searchParams.get("scroll")
+  const [mounted, setMounted] = useState(false)
 
-  // Control de montaje para evitar parpadeos en SSR
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Scroll automático al cargar la página si viene con ?scroll=...
   useEffect(() => {
     if (mounted && scrollTarget) {
       const element = document.getElementById(scrollTarget)
       if (element) {
-        // Delay para asegurar que todo el contenido ya esté renderizado
         setTimeout(() => {
-          const headerHeight = 80 // altura aproximada del header sticky
+          const headerHeight = 80
           const elementPosition = element.getBoundingClientRect().top + window.scrollY
           window.scrollTo({
             top: elementPosition - headerHeight,
@@ -37,18 +37,25 @@ export default function Home() {
     }
   }, [mounted, scrollTarget])
 
-  if (!mounted) return null
+  return null
+}
 
+// --- COMPONENTE PRINCIPAL ---
+export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-black text-white selection:bg-primary selection:text-primary-foreground">
+      
+      {/* AQUÍ ESTÁ LA SOLUCIÓN: Envolvemos el manejador en Suspense */}
+      <Suspense fallback={null}>
+        <ScrollHandler />
+      </Suspense>
+
       <HeroSlider />
       <CountdownSection />
       <PrizesSection />
-      <ConsultarCodigo />
       <WinnersSlider />
-      
-      
-
+      <SocialSection />
+      <Footer />
     </main>
   )
 }
