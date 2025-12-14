@@ -7,8 +7,7 @@ import HeroSlider from "@/components/hero-slider"
 import CountdownSection from "@/components/countdown-section"
 import PrizesSection from "@/components/prizes-section"
 import WinnersSlider from "@/components/winners-slider"
-import SocialSection from "@/components/social-section"
-import Footer from "@/components/footer"
+import ConsultarCodigo from "@/components/consultaticket"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -45,7 +44,11 @@ export default function Home() {
       <HeroSlider />
       <CountdownSection />
       <PrizesSection />
+      <ConsultarCodigo />
       <WinnersSlider />
+      
+      
+
     </main>
   )
 }

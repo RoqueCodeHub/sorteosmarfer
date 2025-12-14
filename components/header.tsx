@@ -38,11 +38,12 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <h1
-              className="text-3xl font-bold text-black cursor-pointer hover:text-orange-600 transition-colors duration-300"
+              className="text-3xl font-bold text-orange-600 text-center cursor-pointer hover:text-orange-600 transition-colors duration-300"
               onClick={() => scrollToSection("hero")}
             >
-              MaxFer
-            </h1>
+              IMMU
+            </h1><h3>Ganaconmigo<strong>YA</strong></h3>
+
           </div>
 
           {/* Desktop Navigation */}
